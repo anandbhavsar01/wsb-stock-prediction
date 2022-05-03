@@ -9,7 +9,8 @@ Created on Sun May  1 14:51:44 2022
 #yfinance.Tickers()
 import os
 import pandas as pd
-
+import numpy as np
+import itertools
 os.chdir('/Users/laixu/Documents/Machine learning CS 229/project/wsb-stock-prediction/')
 data_path  = './dataset/'
 reddit_df = pd.read_csv(data_path + 'reddit_wsb.csv')
@@ -48,27 +49,50 @@ def get_split_text_from_dict(post_dict):
         normd  = get_words(post_dict[key])
         split_text_dict[key] = normd
     return split_text_dict
+
+def distinct_item_counter_from_list(word_list):
+    txt_counter       = dict()
+    for word in itertools.chain(*word_list):
+      #  print(word)
+        if word in list(txt_counter.keys()):
+            txt_counter[word]  = txt_counter[word] + 1
+              
+        else:
+            txt_counter[word]  = 1 
+    return txt_counter
     
 def cross_check_txt_ticker(tickers, split_text_dict):
     txt_list                = []
     txt_ticker              = dict()
+    txt_ticker_location     = dict()
     for key in split_text_dict.keys():
-        txt_ticker[key]      = [set(tickers) & set(split_text_dict[key])]
-        if len(txt_ticker[key])!=0:
+        txt_ticker[key]      = set(tickers).intersection(set(split_text_dict[key]))
+        if len(txt_ticker[key])!= 0:
             txt_list.append(txt_ticker[key])
-    ticker_counter = {item:txt_list.count(item) for item in txt_list}
-    ticker_counter = {k: v for k, v in sorted(ticker_counter.items(),reverse = True, key=lambda x: x[1])}
-    ticker_counter_top10 = ticker_counter[:10]
+    ticker_counter = distinct_item_counter_from_list(txt_list)
+    # convert dictionary to df and sort
+    ticker_counter_df = pd.DataFrame.from_dict(ticker_counter,orient = 'index')
+    ticker_counter_df.columns = ['count']
+    ticker_counter_df = ticker_counter_df.sort_values(by = 'count',ascending = False).iloc[:50]
+    # more rigid method is to cross cehck data base of top most commonly used american words but 
+    # due to time constraint, in our existing analysis we are just manually knock out words that are
+    # not tickers.
+    # note that the knockout_words should follow your ticker counter df
+    knockout_words   = ['A','IS','YOU','ON','FOR','ARE','DO','GO','UP','NOW','BE','GET','ALL','IT',
+                        'CAN','WE','BE','REAL','ME','LOVE','HAS','NEXT','OR','NEW','OUT','REAL','SO','BIG','UK']
     
+    txt_ticker_list  = set(ticker_counter_df.index) ^ set(knockout_words)
     for key in split_text_dict.keys():
-        txt_ticker[key]      = [set(ticker_counter_top10.keys()) & set(split_text_dict[key])]
-        if len(txt_ticker[key])!=0:
-            txt_list.append(txt_ticker[key])
+        txt_ticker[key]      = [set(split_text_dict[key]) & set(tickers)]
+        
+    for key in split_text_dict.keys():
+        txt_ticker_location[key]      = [set(split_text_dict[key]) & set(txt_ticker_list)]
             
-    return txt_ticker
+    
+    return txt_ticker_list,txt_ticker_location
 
 reddit_dict  = make_dict_title(reddit_df)
 split_text_dict  = get_split_text_from_dict(reddit_dict)
-tmp = cross_check_txt_ticker(tickers, split_text_dict)
+txt_ticker,txt_ticker_location= cross_check_txt_ticker(tickers, split_text_dict)
 
 # count all the tickers 
