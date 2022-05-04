@@ -38,6 +38,18 @@ def post_time_plot_day(reddit_df_d):
     outlier_date   = reddit_df_d.index.min()
     dates_filtered   = reddit_df_d.index.delete(0)
     reddit_df_d      = reddit_df_d.loc[dates_filtered]
-    reddit_df_d
-    plt.subplot(3,3,1)
-        
+    month_end_dates  = ['2021-01-28','2021-02-28','2021-03-29','2021-04-30','2021-05-31',
+                        '2021-06-30','2021-07-31','2021-08-31']
+    
+    splitted_df_list   = []
+    for i in range(len(month_end_dates)-1):
+        tmp            = reddit_df_d.loc[month_end_dates[i]:month_end_dates[i+1]]
+        splitted_df_list.append(tmp)
+    
+    fig,axs   = plt.subplot(3,3,1)
+    axs = axes.ravel()
+    i = 1
+    for df in splitted_df_list:
+        axs[i].plot(splitted_df_list.index, splitted_df_list)
+        plt.yscale('log')
+            
