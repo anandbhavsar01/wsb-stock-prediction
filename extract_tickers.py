@@ -95,4 +95,6 @@ reddit_dict  = make_dict_title(reddit_df)
 split_text_dict  = get_split_text_from_dict(reddit_dict)
 txt_ticker,txt_ticker_location= cross_check_txt_ticker(tickers, split_text_dict)
 
+txt_ticker_location_df = pd.DataFrame.from_dict(txt_ticker_location, orient = 'index')
+txt_ticker_location_df.to_csv('/Users/laixu/Documents/Machine learning CS 229/project/wsb-stock-prediction/ticker_location.csv')
 # count all the tickers 
