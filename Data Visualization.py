@@ -12,6 +12,7 @@ import pandas as pd
 import numpy as np
 import itertools
 from matplotlib import pyplot as plt
+from datetime import datetime
 os.chdir('/Users/laixu/Documents/Machine learning CS 229/project/wsb-stock-prediction/')
 data_path  = './dataset/'
 reddit_df = pd.read_csv(data_path + 'reddit_wsb.csv')
@@ -40,16 +41,30 @@ def post_time_plot_day(reddit_df_d):
     reddit_df_d      = reddit_df_d.loc[dates_filtered]
     month_end_dates  = ['2021-01-28','2021-02-28','2021-03-29','2021-04-30','2021-05-31',
                         '2021-06-30','2021-07-31','2021-08-31']
+    from datetime import datetime
     
     splitted_df_list   = []
     for i in range(len(month_end_dates)-1):
         tmp            = reddit_df_d.loc[month_end_dates[i]:month_end_dates[i+1]]
         splitted_df_list.append(tmp)
     
-    fig,axs   = plt.subplot(3,3,1)
-    axs = axes.ravel()
-    i = 1
+    fig,axs   = plt.subplots(3,3, figsize=(20, 20),sharey=True)
+    axs = axs.ravel()
+    i = 0
     for df in splitted_df_list:
-        axs[i].plot(splitted_df_list.index, splitted_df_list)
-        plt.yscale('log')
-            
+        print(df)
+        axs[i].plot(df)
+        axs[i].set_yscale('log')
+        axs[i].xaxis.set_major_formatter(dates.DateFormatter('%d-%m-%Y'))
+        plt.setp(axs[i].get_xticklabels(), rotation=45)
+        i = i+1
+        
+        
+    fig,axs   = plt.subplots(3,3, figsize=(20, 20),sharey=True)
+    axs = axs.ravel()
+    i = 0
+    for df in splitted_df_list:
+        axs[i].scatter(df.index, df)
+        axs[i].set_yscale('log')
+        axs[i].set_xticklabels(labels =df.index.to_period('D'),rotation = 45)
+        i = i+1
