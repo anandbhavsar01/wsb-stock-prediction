@@ -64,6 +64,8 @@ for title in reddit_df['title']:
     
     
 sentiment_analyzer_result = pd.concat(title_sentiment_dict,axis =1).transpose()
+new_df     = pd.DataFrame(index = sentiment_analyzer_result.index, columns = ['neg', 'neu', 'pos', 'compound', 'label'])
+
 for i in  range(len(sentiment_analyzer_result)):
     row      = sentiment_analyzer_result.iloc[i,:]
     if row['compound'] >= 0.05 :
@@ -72,6 +74,23 @@ for i in  range(len(sentiment_analyzer_result)):
         row['label']  = "Negative"
     else :
         row['label']  = "Neutral"
-    sentiment_analyzer_result.iloc[i,'label']  = row['label']
+    new_df .iloc[i,:]  = row
+new_df.to_csv('sentiment_analyzer_result.csv')
+new_df  = new_df.reset_index()
+new_df  = new_df.drop(columns = ['level_1'])
+new_df   = new_df.set_index('level_0')
+pd.concat([reddit_df,new_df],axis =1).to_csv('text_and_label.csv')
+
+body_sentiment_dict = dict()
+i = 0
+for body_main in reddit_df['body']:
+    if math.isnan(body_main):
+        body_sentiment_dict[i] = np.nan
     
-sentiment_analyzer_result.to_csv('sentiment_analyzer_result.csv')
+    else:
+        tokenized_body    = sent_tokenize(body_main)
+        body_filtered = [x for x in tokenized_body  if x not in a]
+        sentiment_dict_body,sentiment_df_body  = sentiment_scores(body_filtered)
+        body_sentiment_dict[i]   = sentiment_df_body 
+    i    = i+1
+    

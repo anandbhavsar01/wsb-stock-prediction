@@ -52,10 +52,10 @@ def post_time_plot_day(reddit_df_d):
     axs = axs.ravel()
     i = 0
     for df in splitted_df_list:
-        print(df)
+      #  print(df)
         axs[i].plot(df)
         axs[i].set_yscale('log')
-        axs[i].xaxis.set_major_formatter(dates.DateFormatter('%d-%m-%Y'))
+    #    axs[i].xaxis.set_major_formatter(df.index)
         plt.setp(axs[i].get_xticklabels(), rotation=45)
         i = i+1
         
@@ -66,5 +66,5 @@ def post_time_plot_day(reddit_df_d):
     for df in splitted_df_list:
         axs[i].scatter(df.index, df)
         axs[i].set_yscale('log')
-        axs[i].set_xticklabels(labels =df.index.to_period('D'),rotation = 45)
+        plt.setp(axs[i].get_xticklabels(), rotation=45)
         i = i+1
