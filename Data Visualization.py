@@ -13,10 +13,9 @@ import numpy as np
 import itertools
 from matplotlib import pyplot as plt
 from datetime import datetime
-os.chdir('/Users/laixu/Documents/Machine learning CS 229/project/wsb-stock-prediction/')
+#os.chdir('/Users/laixu/Documents/Machine learning CS 229/project/wsb-stock-prediction/')
 data_path  = './dataset/'
 reddit_df = pd.read_csv(data_path + 'reddit_wsb.csv')
-
 
 def daily_reddit_df(reddit_df):
     reddit_df['post_amout'] = 1
@@ -34,6 +33,7 @@ def post_time_plot(reddit_df_d):
     plt.xticks(rotation = 90)
     plt.title('Number of post by day')
     reddit_df_d.plot()
+    plt.savefig('posttime.jpg')
     
 def post_time_plot_day(reddit_df_d):
     outlier_date   = reddit_df_d.index.min()
@@ -52,7 +52,7 @@ def post_time_plot_day(reddit_df_d):
     axs = axs.ravel()
     i = 0
     for df in splitted_df_list:
-      #  print(df)
+        print(df)
         axs[i].plot(df)
         axs[i].set_yscale('log')
     #    axs[i].xaxis.set_major_formatter(df.index)
@@ -68,3 +68,7 @@ def post_time_plot_day(reddit_df_d):
         axs[i].set_yscale('log')
         plt.setp(axs[i].get_xticklabels(), rotation=45)
         i = i+1
+    plt.savefig('postday.jpg')
+
+post_time_plot(reddit_df_d)
+post_time_plot_day(reddit_df_d)
