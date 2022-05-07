@@ -9,6 +9,9 @@ file = read_csv(r'../dataset/reddit_wsb.csv')
 tickers = read_excel(r'../dataset/tickers.xlsx')
 tickers_found = read_csv(r'../dataset/ticker_location.csv')
 
+file['timestamp'] = pd.to_datetime(file['timestamp'])
+print(file)
+
 sorted_comments = file.sort_values(['score'], ascending=False)
 print(sorted_comments.head(1))
 
