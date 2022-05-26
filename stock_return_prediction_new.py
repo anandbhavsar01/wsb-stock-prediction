@@ -51,7 +51,6 @@ get_cumulative_return_plot(daily_return_close2close)
 # get the sentiment by ticker
 VADER_sentiment = pd.read_csv('text_and_label.csv').set_index('timestamp')
 ticker_location         = pd.read_csv('./dataset/' + 'ticker_location.csv')
-ticker_location['Ticker'][4].replace("{'",'').replace("'}",'')
 ticker_location         = ticker_location.dropna(how = 'any')
 ticker_location      = ticker_location.apply(lambda x:x.Ticker.replace("{'",'').replace("'}",'').replace("', '",' '),axis =1)
 
@@ -83,12 +82,41 @@ sorted_sentiment_daily_sum     = sorted_sentiment.groupby('Day').sum()
 sorted_sentiment_daily_sum.to_csv('./Dataset/sentiment_by_ticker_sum.csv')
 sorted_sentiment_daily_mean     =  sorted_sentiment.groupby('Day').mean()
 sorted_sentiment_daily_mean.to_csv('./Dataset/sentiment_by_ticker_mean.csv')
+
 # use the average first, generate correlation
-corr_df = pd.DataFrame(columns = overnight_ret.columns)
+corr_dict_mean = dict()
 for ticker in corr_df.columns:
-    combined_df     = pd.concat([overnight_ret[ticker],sorted_sentiment_daily_mean[ticker].fillna(0)],axis =1)
+    combined_df     = pd.concat([pd.to_numeric(overnight_ret[ticker]),sorted_sentiment_daily_mean[ticker].fillna(0)],axis =1)
     combined_df.columns = ['overnight_ret','sentiment_mean']
     combined_df       = combined_df.dropna(how ='any')
-    overnight_ret_ticker     = combined_df[['overnight_ret']] 
+    overnight_ret_ticker     = combined_df[['overnight_ret']]
     sentiment_mean_ticker    = combined_df[['sentiment_mean']]
-    corr_df[ticker] = combined_df.corr()
+    corr_dict_mean[ticker]          = combined_df.corr().values[0,1]
+    
+    
+corr_dict_sum = dict()
+for ticker in corr_df.columns:
+    combined_df     = pd.concat([pd.to_numeric(overnight_ret[ticker]),sorted_sentiment_daily_sum[ticker].fillna(0)],axis =1)
+    combined_df.columns = ['overnight_ret','sentiment_sum']
+    combined_df       = combined_df.dropna(how ='any')
+    overnight_ret_ticker     = combined_df[['overnight_ret']]
+    sentiment_mean_ticker    = combined_df[['sentiment_sum']]
+    corr_dict_sum[ticker]          = combined_df.corr().values[0,1]
+    
+# time series z score sentiment sum
+
+# time series z score sentiment mean
+    
+def get_corr_dict(sentiment,ret):
+    corr_dict    = dict()
+    for ticker in ret.columns:
+       combined_df     = pd.concat([pd.to_numeric(ret[ticker]),sentiment[ticker].fillna(0)],axis =1)
+       combined_df.columns = ['overnight_ret','sentiment_sum']
+       combined_df       = combined_df.dropna(how ='any')
+       corr_dict[ticker]          = combined_df.corr().values[0,1]
+    
+    return corr_dict 
+
+
+# compute hit ratio
+
