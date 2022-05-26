@@ -11,16 +11,16 @@ import os
 import pandas as pd
 import numpy as np
 import itertools
-os.chdir('/Users/laixu/Documents/Machine learning CS 229/project/wsb-stock-prediction/')
-data_path  = './dataset/'
-reddit_df = pd.read_csv(data_path + 'reddit_wsb.csv')
-equity_tickers   = pd.read_excel(data_path + 'tickers.xlsx', sheet_name = 'stocks',index_col = None)['Symbol']
-crypto_tickers   = pd.read_excel(data_path + 'tickers.xlsx', sheet_name = 'crypto', index_col = None)['Symbol']
-tickers          = np.append(equity_tickers,crypto_tickers).tolist()
-tickers_list     = []
-for ticker in tickers:
-  #  print(ticker)
-    tickers_list.append(ticker.lower())
+#os.chdir('/Users/laixu/Documents/Machine learning CS 229/project/wsb-stock-prediction/')
+#data_path  = './dataset/'
+#reddit_df = pd.read_csv(data_path + 'reddit_wsb.csv')
+#equity_tickers   = pd.read_excel(data_path + 'tickers.xlsx', sheet_name = 'stocks',index_col = None)['Symbol']
+#crypto_tickers   = pd.read_excel(data_path + 'tickers.xlsx', sheet_name = 'crypto', index_col = None)['Symbol']
+#tickers          = np.append(equity_tickers,crypto_tickers).tolist()
+#tickers_list     = []
+#for ticker in tickers:
+#  #  print(ticker)
+#    tickers_list.append(ticker.lower())
     
     
 def make_dict_title(reddit_df):
@@ -91,8 +91,11 @@ def cross_check_txt_ticker(tickers, split_text_dict):
     
     return txt_ticker_list,txt_ticker_location
 
+
+# how to use
+'''
 reddit_dict  = make_dict_title(reddit_df)
 split_text_dict  = get_split_text_from_dict(reddit_dict)
 txt_ticker,txt_ticker_location= cross_check_txt_ticker(tickers, split_text_dict)
-
+'''
 # count all the tickers 
