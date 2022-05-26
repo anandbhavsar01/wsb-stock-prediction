@@ -5,7 +5,9 @@ Created on Fri May  6 18:06:19 2022
 
 @author: laixu
 """
+
 import os
+os.chdir('/Users/laixu/Documents/Machine learning CS 229/Project/wsb-stock-prediction')
 import pandas as pd
 import numpy as np
 import itertools
@@ -22,8 +24,20 @@ volume             = stock_price.loc[:,stock_price.iloc[0,]=='Volume']
 
 close_price        = close_price.reset_index()
 close_price        = close_price .drop(index = [0,1])
-#.columns[0] = ['DATE']
 close_price  = close_price.set_index('index')
+
+#.columns[0] = ['DATE']
+
+open_price        = open_price.reset_index()
+open_price        = open_price .drop(index = [0,1])
+open_price  = open_price.set_index('index')
+#.columns[0] = ['DATE']
+
+
+overnight_ret    = (open_price - close_price.shift(1))/close_price.shift(1)
+day_ret    = (close_price - open_price)/open_price
+
+tickers_list    = close_price.columns.tolist()
 
 daily_return_close2close       = close_price.diff(1)/close_price
 def get_cumulative_return_plot(df):
@@ -35,9 +49,46 @@ get_cumulative_return_plot(daily_return_close2close)
 
 
 # get the sentiment by ticker
-VADER_sentiment = pd.read_csv('text_and_label.csv')
+VADER_sentiment = pd.read_csv('text_and_label.csv').set_index('timestamp')
 ticker_location         = pd.read_csv('./dataset/' + 'ticker_location.csv')
-ticker_list             = pd.read_csv('')
-def_get_sentiment_by_ticker(sentiment_label, ticker_location):
-    ticker_sentiment_df     = pd.DataFrame(index = sentiment_label.index, columns = ticker_list)
-    
+ticker_location['Ticker'][4].replace("{'",'').replace("'}",'')
+ticker_location         = ticker_location.dropna(how = 'any')
+ticker_location      = ticker_location.apply(lambda x:x.Ticker.replace("{'",'').replace("'}",'').replace("', '",' '),axis =1)
+
+# mapping sentiment to ticker
+sentiment_df        = pd.DataFrame(index = VADER_sentiment.index ,columns = tickers_list)
+for i in range(len(ticker_location)):
+    ticker_list  = ticker_location.iloc[i].split(' ')
+    for ticker in ticker_list:
+        post_num     = ticker_location.index[i]
+        sentiment_df.iloc[post_num][ticker]   = VADER_sentiment.iloc[post_num]['label']
+            
+sentiment_df.to_csv('./Dataset/sentiment_by_ticker.csv')
+sentiment_df_filled    = sentiment_df.fillna(method = 'ffill')
+sentiment_df_filled.to_csv('./Dataset/sentiment_by_ticker_filleddown.csv')
+
+sentiment_df_sorted = sentiment_df_filled.sort_index()
+sentiment_df_sorted.iloc[1:,].to_csv('./Dataset/sentiment_by_ticker_filledsorted.csv')
+
+sorted_sentiment  = pd.read_csv('./Dataset/sentiment_by_ticker_filledsorted.csv').set_index('timestamp')
+sorted_sentiment.index = pd.to_datetime(sorted_sentiment.index)
+
+sorted_sentiment    = sorted_sentiment.replace({'Positive':1,
+                                                'Neutral':0,
+                                                'Negative':-1})
+
+# aggregate sentiment by day
+sorted_sentiment['Day']    = sorted_sentiment.index.floor('D')
+sorted_sentiment_daily_sum     = sorted_sentiment.groupby('Day').sum()
+sorted_sentiment_daily_sum.to_csv('./Dataset/sentiment_by_ticker_sum.csv')
+sorted_sentiment_daily_mean     =  sorted_sentiment.groupby('Day').mean()
+sorted_sentiment_daily_mean.to_csv('./Dataset/sentiment_by_ticker_mean.csv')
+# use the average first, generate correlation
+corr_df = pd.DataFrame(columns = overnight_ret.columns)
+for ticker in corr_df.columns:
+    combined_df     = pd.concat([overnight_ret[ticker],sorted_sentiment_daily_mean[ticker].fillna(0)],axis =1)
+    combined_df.columns = ['overnight_ret','sentiment_mean']
+    combined_df       = combined_df.dropna(how ='any')
+    overnight_ret_ticker     = combined_df[['overnight_ret']] 
+    sentiment_mean_ticker    = combined_df[['sentiment_mean']]
+    corr_df[ticker] = combined_df.corr()
