@@ -118,5 +118,8 @@ def get_corr_dict(sentiment,ret):
     return corr_dict 
 
 
-# compute hit ratio
+def trade_per_stock(ticker, sentiment):
+    for date in sentiment.index:
+        
+
 
