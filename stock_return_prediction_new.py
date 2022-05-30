@@ -7,7 +7,9 @@ Created on Fri May  6 18:06:19 2022
 """
 
 import os
-os.chdir('/Users/laixu/Documents/Machine learning CS 229/Project/wsb-stock-prediction')
+#os.chdir('/Users/laixu/Documents/Machine learning CS 229/Project/wsb-stock-prediction')
+#os.chdir('C:/Users/anand/Documents/CS229/project/wsb-stock-prediction')
+
 import pandas as pd
 import numpy as np
 import itertools
@@ -84,6 +86,7 @@ sorted_sentiment_daily_mean     =  sorted_sentiment.groupby('Day').mean()
 sorted_sentiment_daily_mean.to_csv('./Dataset/sentiment_by_ticker_mean.csv')
 
 # use the average first, generate correlation
+"""
 corr_dict_mean = dict()
 for ticker in corr_df.columns:
     combined_df     = pd.concat([pd.to_numeric(overnight_ret[ticker]),sorted_sentiment_daily_mean[ticker].fillna(0)],axis =1)
@@ -102,7 +105,7 @@ for ticker in corr_df.columns:
     overnight_ret_ticker     = combined_df[['overnight_ret']]
     sentiment_mean_ticker    = combined_df[['sentiment_sum']]
     corr_dict_sum[ticker]          = combined_df.corr().values[0,1]
-    
+"""    
 # time series z score sentiment sum
 
 # time series z score sentiment mean
@@ -117,9 +120,26 @@ def get_corr_dict(sentiment,ret):
     
     return corr_dict 
 
+<<<<<<< HEAD
 
 def trade_per_stock(ticker, sentiment):
     for date in sentiment.index:
         
 
 
+=======
+# compute hit ratio
+def get_hit_ratio(sentiment, label):
+    accuracy = 0
+    points = 0
+    for index, row in label.iterrows():
+        print(index)
+        print(sentiment[str(index)])
+        print(row)
+
+
+# get labeled data
+labeled_sentiment = pd.read_excel('dataset/reddit_wsb_final.xlsx').set_index('timestamp')
+found_sentiment = pd.read_csv('text_and_label.csv').set_index('timestamp')
+print(get_hit_ratio(found_sentiment, labeled_sentiment))
+>>>>>>> 732abcc70c0dad7fce02eec5892ef896058fe3e2
