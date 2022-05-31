@@ -5,9 +5,9 @@ Created on Fri May  6 18:06:19 2022
 
 @author: laixu
 """
-
+!pip install tensorflow-gpu==1.15.0 tensorflow==1.15.0 stable-baselines gym-anytrading gym
 import os
-#os.chdir('/Users/laixu/Documents/Machine learning CS 229/Project/wsb-stock-prediction')
+os.chdir('/Users/laixu/Documents/Machine learning CS 229/Project/wsb-stock-prediction')
 #os.chdir('C:/Users/anand/Documents/CS229/project/wsb-stock-prediction')
 
 import pandas as pd
@@ -38,6 +38,7 @@ open_price  = open_price.set_index('index')
 
 overnight_ret    = (open_price - close_price.shift(1))/close_price.shift(1)
 day_ret    = (close_price - open_price)/open_price
+all_ret     = (close_price - close_price.shift(1))/close_price.shift(1)
 
 tickers_list    = close_price.columns.tolist()
 
@@ -50,6 +51,28 @@ def get_cumulative_return_plot(df):
 get_cumulative_return_plot(daily_return_close2close)
 
 
+((1+ day_ret).cumprod()-1).sum(axis =1).plot()
+
+def get_portfolio_bench_returns(tickers,return_type, day_ret, overnight_ret, all_ret):
+    if (return_type) =='Day':
+        df           = day_ret[tickers]
+    if (return_type) =='Overnight':
+        df           = overnight_ret[tickers]
+    if (return_type) =='all':
+        df           = all_ret[tickers]
+    port_ret         = (1+ df.fillna(0)).cumprod() -1    
+    return port_ret
+
+    
+def get_corr_dict(sentiment,ret):
+    corr_dict    = dict()
+    for ticker in ret.columns:
+       combined_df     = pd.concat([pd.to_numeric(ret[ticker]),sentiment[ticker].fillna(0)],axis =1)
+       combined_df.columns = ['overnight_ret','sentiment_sum']
+       combined_df       = combined_df.dropna(how ='any')
+       corr_dict[ticker]          = combined_df.corr().values[0,1]
+    
+    return corr_dict 
 # get the sentiment by ticker
 VADER_sentiment = pd.read_csv('text_and_label.csv').set_index('timestamp')
 ticker_location         = pd.read_csv('./dataset/' + 'ticker_location.csv')
@@ -85,10 +108,12 @@ sorted_sentiment_daily_sum.to_csv('./Dataset/sentiment_by_ticker_sum.csv')
 sorted_sentiment_daily_mean     =  sorted_sentiment.groupby('Day').mean()
 sorted_sentiment_daily_mean.to_csv('./Dataset/sentiment_by_ticker_mean.csv')
 
+
+expanding_mean             = sorted_sentiment_daily_sum.expanding.mean(1)
 # use the average first, generate correlation
-"""
+
 corr_dict_mean = dict()
-for ticker in corr_df.columns:
+for ticker in sorted_sentiment_daily_mean.columns:
     combined_df     = pd.concat([pd.to_numeric(overnight_ret[ticker]),sorted_sentiment_daily_mean[ticker].fillna(0)],axis =1)
     combined_df.columns = ['overnight_ret','sentiment_mean']
     combined_df       = combined_df.dropna(how ='any')
@@ -98,36 +123,57 @@ for ticker in corr_df.columns:
     
     
 corr_dict_sum = dict()
-for ticker in corr_df.columns:
+for ticker in sorted_sentiment_daily_mean.columns:
     combined_df     = pd.concat([pd.to_numeric(overnight_ret[ticker]),sorted_sentiment_daily_sum[ticker].fillna(0)],axis =1)
     combined_df.columns = ['overnight_ret','sentiment_sum']
     combined_df       = combined_df.dropna(how ='any')
-    overnight_ret_ticker     = combined_df[['overnight_ret']]
-    sentiment_mean_ticker    = combined_df[['sentiment_sum']]
     corr_dict_sum[ticker]          = combined_df.corr().values[0,1]
-"""    
+
+corr_sum_df       = pd.DataFrame(corr_dict_sum, index = ['Correlation']).T
+corr_sum_df_abs   = np.abs(corr_sum_df)
+corr_sum_df_abs   = corr_sum_df_abs.sort_values('Correlation',ascending=False)
+tmp               = pd.concat([corr_sum_df_abs,corr_sum_df ],axis =1)
+tmp.columns       = ['Abs_correlation','Correlation']
+
+tickers          = sorted_sentiment_daily_mean.columns
+
+port_ret         = get_portfolio_bench_returns(tickers,'all', day_ret, overnight_ret, all_ret)
+port_ret.sum(axis =1).plot()
+
+port_ret_day         = get_portfolio_bench_returns(tickers,'Day', day_ret, overnight_ret, all_ret)
+port_ret_day.sum(axis =1).plot()
+port_ret_day.plot()
+
+port_ret_night         = get_portfolio_bench_returns(tickers,'Overnight', day_ret, overnight_ret, all_ret)
+port_ret_night.sum(axis =1).plot()
+port_ret_night.plot()
+
+
+def trade_based_on_sentiment(ret, sentiment):
+    trade_choice      = np.sign(sentiment.shift(1))
+    port_ret          = (1+ (trade_choice * ret).fillna(0)).cumprod() -1
+    port_ret          = port_ret.sum(axis =1)
+    return port_ret
+
+selected_tickers      = ['PLTR','GME','BY','BB','SNDL','AMC','SPCE']
+port_ret_night  = trade_based_on_sentiment(overnight_ret[selected_tickers],sorted_sentiment_daily_mean)
+
+
+
+
+
 # time series z score sentiment sum
 
 # time series z score sentiment mean
+
+# we use purchasing 1 share for all the tickers in the portfolio as a 'Buy and hold strategy' for the benchmark comparison purpose.
+
+
+def get_accuracy_ratio:
     
-def get_corr_dict(sentiment,ret):
-    corr_dict    = dict()
-    for ticker in ret.columns:
-       combined_df     = pd.concat([pd.to_numeric(ret[ticker]),sentiment[ticker].fillna(0)],axis =1)
-       combined_df.columns = ['overnight_ret','sentiment_sum']
-       combined_df       = combined_df.dropna(how ='any')
-       corr_dict[ticker]          = combined_df.corr().values[0,1]
     
-    return corr_dict 
-
-<<<<<<< HEAD
-
-def trade_per_stock(ticker, sentiment):
-    for date in sentiment.index:
-        
-
-
-=======
+    
+    
 # compute hit ratio
 def get_hit_ratio(sentiment, label):
     accuracy = 0
