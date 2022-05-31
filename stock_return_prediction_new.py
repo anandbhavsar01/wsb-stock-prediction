@@ -5,7 +5,7 @@ Created on Fri May  6 18:06:19 2022
 
 @author: laixu
 """
-!pip install tensorflow-gpu==1.15.0 tensorflow==1.15.0 stable-baselines gym-anytrading gym
+!pip install tensorflow==1.15.0 stable-baselines gym-anytrading gym
 import os
 os.chdir('/Users/laixu/Documents/Machine learning CS 229/Project/wsb-stock-prediction')
 #os.chdir('C:/Users/anand/Documents/CS229/project/wsb-stock-prediction')
@@ -109,7 +109,10 @@ sorted_sentiment_daily_mean     =  sorted_sentiment.groupby('Day').mean()
 sorted_sentiment_daily_mean.to_csv('./Dataset/sentiment_by_ticker_mean.csv')
 
 
-expanding_mean             = sorted_sentiment_daily_sum.expanding.mean(1)
+expanding_mean             = sorted_sentiment_daily_sum.expanding(1).mean()
+expanding_std              = sorted_sentiment_daily_sum.expanding(1).std()
+expanding_z                = expanding_mean/expanding_std
+expanding_z.to_csv('./Dataset/sentiment_by_ticker_tszscore.csv')
 # use the average first, generate correlation
 
 corr_dict_mean = dict()
@@ -150,13 +153,13 @@ port_ret_night.plot()
 
 
 def trade_based_on_sentiment(ret, sentiment):
-    trade_choice      = np.sign(sentiment.shift(1))
+    trade_choice      = (sentiment.shift(1))
     port_ret          = (1+ (trade_choice * ret).fillna(0)).cumprod() -1
     port_ret          = port_ret.sum(axis =1)
     return port_ret
 
 selected_tickers      = ['PLTR','GME','BY','BB','SNDL','AMC','SPCE']
-port_ret_night  = trade_based_on_sentiment(overnight_ret[selected_tickers],sorted_sentiment_daily_mean)
+port_ret_all  = trade_based_on_sentiment(day_ret[selected_tickers],expanding_z)
 
 
 
