@@ -1,3 +1,5 @@
+import regex
+
 def get_words(post):
     split_l = post.split(" ")
     tmp_list = ' '.join(split_l).split()
@@ -5,7 +7,7 @@ def get_words(post):
     return normd
 
 def remove_links(post):
-    url_pattern = re.compile(r'https?//\S+|www\.\S+')
+    url_pattern = regex.compile(r'https?//\S+|www\.\S+')
     return url_pattern.sub(r'', post)
     
 def remove_bad_chars(post):
@@ -32,3 +34,16 @@ def convert_to_dict(data,col):
     for index, row in data.iterrows():
         my_dict[index] = row[col]
     return my_dict
+
+
+from nltk.corpus import stopwords
+
+def remove_stop_words(dict_sentences):
+    stop_words = set(stopwords.words('english'))
+    for i in dict_sentences.keys():
+        filtered = []
+        for word in dict_sentences[i]:
+            if word not in stop_words:
+                filtered.append(word)
+        dict_sentences[i] = filtered
+    return dict_sentences
