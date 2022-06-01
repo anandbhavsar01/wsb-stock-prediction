@@ -47,3 +47,19 @@ def remove_stop_words(dict_sentences):
                 filtered.append(word)
         dict_sentences[i] = filtered
     return dict_sentences
+
+import numpy as np
+
+def convert_to_matrix(dataset):
+    words = {}
+    count = 1
+    for i in range(0,len(dataset)):
+        for word in dataset[i].values():
+            if not words.get(word):
+                words[word] = count
+                count += 1
+    dataset_mat = np.zeros((len(dataset),count))
+    for i in range(0,len(dataset)):
+        for word in dataset[i].values():
+            dataset_mat[i][words[word]] += 1
+    return dataset_mat
