@@ -23,7 +23,11 @@ for i in filtered_titles.keys():
 dataset_mat = preprocess.convert_to_matrix(dataset)
 print('Preprocessing Complete')
 
-X_train, X_test, y_train, y_test = train_test_split(dataset_mat, data['return'], test_size=0.2)
+X_train = dataset[:int(len(dataset_mat)*0.8)]
+X_test = dataset[int(len(dataset_mat)*0.8):]
+y_train = data['return'][:int(len(dataset_mat)*0.8)]
+y_test = data['return'][int(len(dataset_mat)*0.8):]
+#X_train, X_test, y_train, y_test = train_test_split(dataset_mat, data['return'], test_size=0.2)
 
 from sklearn.ensemble import RandomForestClassifier
 

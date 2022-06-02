@@ -22,10 +22,8 @@ for i in filtered_titles.keys():
 print('Preprocessing Complete')
 
 # Create train and test set
-import random
-random.shuffle(dataset)
-train = dataset[:int(len(dataset)*0.9)]
-test = dataset[int(len(dataset)*0.9):]
+train = dataset[:int(len(dataset)*0.8)]
+test = dataset[int(len(dataset)*0.8):]
 
 print('Running Decision Tree')
 classifier = nltk.classify.DecisionTreeClassifier.train(train, entropy_cutoff=0, support_cutoff=0)
