@@ -65,3 +65,22 @@ validation_y_list = y_test.values.tolist()
 true_prediction = np.sum([l1==l2 for l1, l2 in zip(predicted_y_list,validation_y_list)])
 accuracy_rate    = true_prediction/len(y_test)
 print("accuracy_rate ",accuracy_rate)
+
+# naive bayes on stock direction
+# match the ticker on that day with
+ticker_location         = pd.read_csv('./dataset/' + 'ticker_location.csv')
+ticker_location         = ticker_location.dropna(how = 'any')
+ticker_location      = ticker_location.apply(lambda x:x.Ticker.replace("{'",'').replace("'}",'').replace("', '",' '),axis =1)
+post_and_ticker       = pd.concat([reddit_df_labeled,ticker_location],axis =1).set_index('timestamp')
+# replace Y with stock returns
+def stock_return_mapper():
+    for i in range(len(ticker_location)):
+    ticker_list  = ticker_location.iloc[i].split(' ')
+    for ticker in ticker_list:
+        posttime     = post_and_ticker.index[i]
+        ret          = 
+
+X = reddit_df_labeled['title']
+y = reddit_df_labeled['label']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
+

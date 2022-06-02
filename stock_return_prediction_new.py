@@ -40,6 +40,10 @@ overnight_ret    = (open_price - close_price.shift(1))/close_price.shift(1)
 day_ret    = (close_price - open_price)/open_price
 all_ret     = (close_price - close_price.shift(1))/close_price.shift(1)
 
+all_ret.to_csv('./Dataset/close2close_ret.csv')
+day_ret.to_csv('./Dataset/open2close_ret.csv')
+overnight_ret.to_csv('./Dataset/close2open_ret.csv')
+
 tickers_list    = close_price.columns.tolist()
 
 daily_return_close2close       = close_price.diff(1)/close_price

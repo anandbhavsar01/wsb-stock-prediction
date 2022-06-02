@@ -1,5 +1,5 @@
 import pandas as pd
-
+import numpy as np
 
 def equity_model_ts(stocks, sentiment_data, ticker_data):
     sentiment  = sentiment_data
@@ -30,6 +30,7 @@ def equity_model_ts(stocks, sentiment_data, ticker_data):
 def equity_model(stocks, sentiment_data, ticker_data):
     equity_dict = dict()
     holding_dict  = dict()
+    weight_dict   = dict()
     for i, day in sentiment_data.iterrows():
         print(int(day['Day']))
         if int(day['Day']) in ticker_data.Day.values:
@@ -50,9 +51,10 @@ def equity_model(stocks, sentiment_data, ticker_data):
                 # else hold
                 equity_dict[int(day['Day'])] = equity
                 holding_dict[int(day['Day'])] = pd.DataFrame(stocks, index = [int(day['Day'])])
+                weight_dict[int(day['Day'])]  = holding_dict[int(day['Day'])]/holding_dict[int(day['Day'])].sum(axis =1).values[0]
             print(equity, stocks)
     #print(equity) 
-    return equity_dict,holding_dict
+    return equity_dict,holding_dict, weight_dict
 
 
 def equity_model_oneshare(stocks, sentiment_data, ticker_data):
@@ -67,11 +69,11 @@ def equity_model_oneshare(stocks, sentiment_data, ticker_data):
             for stock in stocks.keys():
                 if day[stock] > 0:
                     # buy stock
-                    stocks[stock] += day[stock]
+                    stocks[stock] += 1
                 elif day[stock] < 0:
                     # sell stock
                     if stocks[stock] > day[stock]:
-                        stocks[stock] -= day[stock]
+                        stocks[stock] -= 1
                     else:
                         stocks[stock] = 0
                 equity += stocks[stock] * ticker_data.loc[ticker_data['Day']==int(day['Day']),stock].values[0]
@@ -117,9 +119,45 @@ ticker_data = pd.read_excel('tickerdata_day_open.xlsx')
 sentiment_data =  pd.read_csv('dataset/sentiment_ticker_by_day_sum.csv').set_index('Day').shift(1)
 sentiment_data['Day']  = sentiment_data.index
 #sell_at_end_model(stocks, sentiment_data, ticker_data)
-equity_dict,holding_dict  = equity_model(stocks, sentiment_data.fillna(0), ticker_data)
+equity_dict,holding_dict, weight_dict  = equity_model(stocks, sentiment_data.fillna(0), ticker_data)
 equity_df  = pd.DataFrame(equity_dict, index = ['Portfolio Value']).T
 holding_df  = pd.concat(holding_dict)
+
+equal_weight  = 1/len(weight_df.columns)
+equal_weight_df = pd.DataFrame(data = equal_weight, index = weight_df.index, columns = weight_df.columns)
+weight_df   = pd.concat(weight_dict)
+weight_df.iloc[0,:] = equal_weight
+
+# compare the returns
+weight_df             = weight_df.reset_index().drop(columns = 'level_1')
+weight_df             = weight_df.rename(columns = {'level_0': 'Day'})
+weight_df             = weight_df.set_index('Day')
+
+equal_weight_df             = equal_weight_df.reset_index()
+equal_weight_df             = equal_weight_df.rename(columns = {'level_0': 'Day'})
+equal_weight_df             = equal_weight_df.set_index('Day')
+
+ticker_data_idx       = ticker_data.set_index('Day')
+
+
+open2open_ret             = ticker_data_idx.diff(1)/ticker_data_idx
+ret_template              = pd.DataFrame(index = open2open_ret.index, columns = open2open_ret.columns )
+ret_template_weights      = ret_template.fillna(weight_df  ).fillna(method = 'ffill')
+ret_template_equal_weights   = ret_template.fillna(equal_weight_df  ).fillna(method = 'ffill')
+strategy_ret      = (open2open_ret * ret_template_weights).sum(axis =1)
+benchmark_ret      = (open2open_ret * ret_template_equal_weights).sum(axis =1)
+combined_ret       = pd.concat([strategy_ret , benchmark_ret],axis =1)
+combined_ret.columns = ['strategy','benchmark']
+
+ticker_data_time = pd.read_excel('tickerdata_day_open_LX.xlsx').Day
+combined_ret.index =ticker_data_time
+((1+ combined_ret).cumprod()-1).plot()
+
+stocks = { 'PLTR':0,'RKT':0,'ONE':0,'AMC':0,'REAL':0,'SPCE':0,'AMD':0,'DD':0,'GME':0,'TSLA':0,'CRSR':0,'RH':0,'BB':0,'CLOV':0,
+    'NOK':0,'AM':0,'WISH':0,'UWMC':0,'BY':0,'MVIS':0,'NIO':0,'APP':0,'SNDL':0,'AAL':0,'TD':0 }
+equity_dict_oneshare,holding_dict_oneshare  = equity_model_oneshare(stocks, sentiment_data.fillna(0), ticker_data)
+equity_df_oneshare  = pd.DataFrame(equity_dict_oneshare, index = ['Portfolio Value']).T
+holding_df_oneshare  = pd.concat(holding_dict_oneshare)
 
 
 ticker_data = pd.read_excel('tickerdata_day_open_LX.xlsx')
