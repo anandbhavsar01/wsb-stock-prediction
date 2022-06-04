@@ -5,7 +5,6 @@ Created on Fri May  6 18:06:19 2022
 
 @author: laixu
 """
-!pip install tensorflow==1.15.0 stable-baselines gym-anytrading gym
 import os
 os.chdir('/Users/laixu/Documents/Machine learning CS 229/Project/wsb-stock-prediction')
 #os.chdir('C:/Users/anand/Documents/CS229/project/wsb-stock-prediction')
@@ -37,13 +36,14 @@ open_price  = open_price.set_index('index')
 
 
 overnight_ret    = (open_price - close_price.shift(1))/close_price.shift(1)
+open2open_ret     = (open_price - open_price.shift(1))/open_price.shift(1)
 day_ret    = (close_price - open_price)/open_price
-all_ret     = (close_price - close_price.shift(1))/close_price.shift(1)
+close2close_ret     = (close_price - close_price.shift(1))/close_price.shift(1)
 
-all_ret.to_csv('./Dataset/close2close_ret.csv')
+close2close_ret.to_csv('./Dataset/close2close_ret.csv')
 day_ret.to_csv('./Dataset/open2close_ret.csv')
 overnight_ret.to_csv('./Dataset/close2open_ret.csv')
-
+open2open_ret .to_csv('./Dataset/open2open_ret.csv')
 tickers_list    = close_price.columns.tolist()
 
 daily_return_close2close       = close_price.diff(1)/close_price
@@ -91,12 +91,12 @@ for i in range(len(ticker_location)):
         post_num     = ticker_location.index[i]
         sentiment_df.iloc[post_num][ticker]   = VADER_sentiment.iloc[post_num]['label']
             
-sentiment_df.to_csv('./Dataset/sentiment_by_ticker.csv')
+#sentiment_df.to_csv('./Dataset/sentiment_by_ticker.csv')
 sentiment_df_filled    = sentiment_df.fillna(method = 'ffill')
-sentiment_df_filled.to_csv('./Dataset/sentiment_by_ticker_filleddown.csv')
+#sentiment_df_filled.to_csv('./Dataset/sentiment_by_ticker_filleddown.csv')
 
 sentiment_df_sorted = sentiment_df_filled.sort_index()
-sentiment_df_sorted.iloc[1:,].to_csv('./Dataset/sentiment_by_ticker_filledsorted.csv')
+#sentiment_df_sorted.iloc[1:,].to_csv('./Dataset/sentiment_by_ticker_filledsorted.csv')
 
 sorted_sentiment  = pd.read_csv('./Dataset/sentiment_by_ticker_filledsorted.csv').set_index('timestamp')
 sorted_sentiment.index = pd.to_datetime(sorted_sentiment.index)
@@ -108,9 +108,9 @@ sorted_sentiment    = sorted_sentiment.replace({'Positive':1,
 # aggregate sentiment by day
 sorted_sentiment['Day']    = sorted_sentiment.index.floor('D')
 sorted_sentiment_daily_sum     = sorted_sentiment.groupby('Day').sum()
-sorted_sentiment_daily_sum.to_csv('./Dataset/sentiment_by_ticker_sum.csv')
+#sorted_sentiment_daily_sum.to_csv('./Dataset/sentiment_by_ticker_sum.csv')
 sorted_sentiment_daily_mean     =  sorted_sentiment.groupby('Day').mean()
-sorted_sentiment_daily_mean.to_csv('./Dataset/sentiment_by_ticker_mean.csv')
+#sorted_sentiment_daily_mean.to_csv('./Dataset/sentiment_by_ticker_mean.csv')
 
 
 expanding_mean             = sorted_sentiment_daily_sum.expanding(1).mean()
@@ -135,12 +135,92 @@ for ticker in sorted_sentiment_daily_mean.columns:
     combined_df.columns = ['overnight_ret','sentiment_sum']
     combined_df       = combined_df.dropna(how ='any')
     corr_dict_sum[ticker]          = combined_df.corr().values[0,1]
-
+    
+    
 corr_sum_df       = pd.DataFrame(corr_dict_sum, index = ['Correlation']).T
 corr_sum_df_abs   = np.abs(corr_sum_df)
 corr_sum_df_abs   = corr_sum_df_abs.sort_values('Correlation',ascending=False)
 tmp               = pd.concat([corr_sum_df_abs,corr_sum_df ],axis =1)
 tmp.columns       = ['Abs_correlation','Correlation']
+
+
+corr_dict_sum = dict()
+for ticker in sorted_sentiment_daily_mean.columns:
+    combined_df     = pd.concat([pd.to_numeric(open2open_ret[ticker]),sorted_sentiment_daily_sum[ticker].fillna(0)],axis =1)
+    combined_df.columns = ['open2open_ret','sentiment_sum']
+    combined_df       = combined_df.dropna(how ='any')
+    corr_dict_sum[ticker]          = combined_df.corr().values[0,1]
+    
+    
+corr_sum_df       = pd.DataFrame(corr_dict_sum, index = ['Correlation']).T
+corr_sum_df_abs   = np.abs(corr_sum_df)
+corr_sum_df_abs   = corr_sum_df_abs.sort_values('Correlation',ascending=False)
+tmp               = pd.concat([corr_sum_df_abs,corr_sum_df ],axis =1)
+tmp.columns       = ['Abs_correlation','Correlation']
+
+
+corr_dict_sum = dict()
+for ticker in sorted_sentiment_daily_mean.columns:
+    combined_df     = pd.concat([pd.to_numeric(close2close_ret[ticker]),sorted_sentiment_daily_sum[ticker].fillna(0)],axis =1)
+    combined_df.columns = ['close2close_ret','sentiment_sum']
+    combined_df       = combined_df.dropna(how ='any')
+    corr_dict_sum[ticker]          = combined_df.corr().values[0,1]
+    
+    
+corr_sum_df       = pd.DataFrame(corr_dict_sum, index = ['Correlation']).T
+corr_sum_df_abs   = np.abs(corr_sum_df)
+corr_sum_df_abs   = corr_sum_df_abs.sort_values('Correlation',ascending=False)
+tmp               = pd.concat([corr_sum_df_abs,corr_sum_df ],axis =1)
+tmp.columns       = ['Abs_correlation','Correlation']
+
+
+
+corr_dict_sum = dict()
+for ticker in sorted_sentiment_daily_mean.columns:
+    combined_df     = pd.concat([pd.to_numeric(day_ret[ticker]),sorted_sentiment_daily_sum[ticker].fillna(0)],axis =1)
+    combined_df.columns = ['day_ret','sentiment_sum']
+    combined_df       = combined_df.dropna(how ='any')
+    corr_dict_sum[ticker]          = combined_df.corr().values[0,1]
+    
+    
+corr_sum_df       = pd.DataFrame(corr_dict_sum, index = ['Correlation']).T
+corr_sum_df_abs   = np.abs(corr_sum_df)
+corr_sum_df_abs   = corr_sum_df_abs.sort_values('Correlation',ascending=False)
+tmp               = pd.concat([corr_sum_df_abs,corr_sum_df ],axis =1)
+tmp.columns       = ['Abs_correlation','Correlation']
+
+
+corr_dict_sum = dict()
+for ticker in sorted_sentiment_daily_mean.columns:
+    combined_df     = pd.concat([pd.to_numeric(day_ret[ticker].shift(1)),sorted_sentiment_daily_sum[ticker].fillna(0)],axis =1)
+    combined_df.columns = ['day_ret','sentiment_sum']
+    combined_df       = combined_df.dropna(how ='any')
+    corr_dict_sum[ticker]          = combined_df.corr().values[0,1]
+    
+    
+corr_sum_df       = pd.DataFrame(corr_dict_sum, index = ['Correlation']).T
+corr_sum_df_abs   = np.abs(corr_sum_df)
+corr_sum_df_abs   = corr_sum_df_abs.sort_values('Correlation',ascending=False)
+tmp               = pd.concat([corr_sum_df_abs,corr_sum_df ],axis =1)
+tmp.columns       = ['Abs_correlation','Correlation']
+
+
+
+corr_dict_sum = dict()
+for ticker in sorted_sentiment_daily_mean.columns:
+    combined_df     = pd.concat([pd.to_numeric(open2open_ret[ticker].shift(1)),sorted_sentiment_daily_sum[ticker].fillna(0)],axis =1)
+    combined_df.columns = ['day_ret','sentiment_sum']
+    combined_df       = combined_df.dropna(how ='any')
+    corr_dict_sum[ticker]          = combined_df.corr().values[0,1]
+    
+    
+corr_sum_df       = pd.DataFrame(corr_dict_sum, index = ['Correlation']).T
+corr_sum_df_abs   = np.abs(corr_sum_df)
+corr_sum_df_abs   = corr_sum_df_abs.sort_values('Correlation',ascending=False)
+tmp               = pd.concat([corr_sum_df_abs,corr_sum_df ],axis =1)
+tmp.columns       = ['Abs_correlation','Correlation']
+
+
 
 tickers          = sorted_sentiment_daily_mean.columns
 
