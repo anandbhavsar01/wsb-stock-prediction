@@ -4,7 +4,7 @@ import nltk
 
 # Get data
 print('Opening Data')
-data = pd.read_csv('dataset/reddit_wsb_returns.csv')
+data = pd.read_csv('dataset/reddit_wsb_returns_final.csv')
 
 # Preprocess
 print('Preprocessing')
@@ -18,7 +18,7 @@ for i in filtered_titles.keys():
     dict_sentence = {}
     for j in range(0,len(sentence)):
         dict_sentence[j] = sentence[j]
-    dataset.append( (dict_sentence, data['return'][i] ) )
+    dataset.append( (dict_sentence, data['Sign'][i] ) )
 print('Preprocessing Complete')
 
 # Create train and test set

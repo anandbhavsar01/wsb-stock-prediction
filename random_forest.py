@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 
 # Get data
 print('Opening Data')
-data = pd.read_csv('dataset/reddit_wsb_returns.csv')
+data = pd.read_csv('dataset/reddit_wsb_returns_final.csv')
 
 # Preprocess
 print('Preprocessing')
@@ -25,8 +25,8 @@ print('Preprocessing Complete')
 
 X_train = dataset_mat[:int(len(dataset_mat)*0.8)]
 X_test = dataset_mat[int(len(dataset_mat)*0.8):]
-y_train = data['return'][:int(len(dataset_mat)*0.8)]
-y_test = data['return'][int(len(dataset_mat)*0.8):]
+y_train = data['Sign'][:int(len(dataset_mat)*0.8)]
+y_test = data['Sign'][int(len(dataset_mat)*0.8):]
 #X_train, X_test, y_train, y_test = train_test_split(dataset_mat, data['return'], test_size=0.2)
 
 from sklearn.ensemble import RandomForestClassifier
