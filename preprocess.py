@@ -11,6 +11,7 @@ def remove_links(post):
     return url_pattern.sub(r'', post)
     
 def remove_bad_chars(post):
+    #print(post)
     other_chars = ['*', '[', ']', '; ',":","“","“","”","-","=","|","^"] 
     for char in other_chars:
         post = post.replace(char, '')
