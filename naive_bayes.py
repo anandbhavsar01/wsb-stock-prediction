@@ -17,7 +17,7 @@ import pandas as pd
 import numpy as np
 import itertools
 from matplotlib import pyplot as plt
-from datetime import datetime
+from datetime import datetime, timedelta
 from sklearn.model_selection import train_test_split
 
 from nltk.classify import NaiveBayesClassifier
@@ -65,3 +65,118 @@ validation_y_list = y_test.values.tolist()
 true_prediction = np.sum([l1==l2 for l1, l2 in zip(predicted_y_list,validation_y_list)])
 accuracy_rate    = true_prediction/len(y_test)
 print("accuracy_rate ",accuracy_rate)
+
+# naive bayes on stock direction
+# match the ticker on that day with
+open2open_ret            = pd.read_csv('./dataset/open2open_ret.csv', index_col =0)
+ticker_location          = pd.read_csv('./dataset/' + 'ticker_location.csv')
+ticker_location         = ticker_location.dropna(how = 'any')
+ticker_location         = ticker_location.apply(lambda x:x.Ticker.replace("{'",'').replace("'}",'').replace("', '",' '),axis =1)
+post_and_ticker          = pd.concat([reddit_df_labeled,ticker_location],axis =1).set_index('timestamp')
+post_and_ticker.index   = pd.to_datetime(post_and_ticker.index)
+post_and_ticker.index   = post_and_ticker.index.map(lambda x: datetime.strftime(x, '%Y-%m-%d'))
+
+# replace Y with stock returns
+def stock_return_mapper(ticker_location, input_ret, post):
+    posttime_list    = []
+    ticker_ret_list  = []
+    for i in range(len(ticker_location)):
+        ticker_list  = ticker_location.iloc[i].split(' ')
+        post_i       = post.iloc[ticker_location.index[i]]['title']
+    
+        for ticker in ticker_list:
+           posttime     =post.iloc[ticker_location.index[i]].name
+           posttime_1d_later    = pd.to_datetime(posttime) + timedelta(1)
+           posttime    = datetime.strftime(posttime_1d_later,'%Y-%m-%d')
+           if posttime in input_ret.index:
+               ticker_ret   = input_ret.loc[posttime,ticker]
+               posttime_list.append(post_i)
+               ticker_ret_list.append(ticker_ret)
+    return posttime_list,ticker_ret_list
+posttime_list,ticker_ret_list  = stock_return_mapper(ticker_location, open2open_ret , post_and_ticker)
+
+#ret_na_len               = len(post_and_ticker.index[post_and_ticker.index =='2021-01-28'])
+ticker_ret_direction     = [1 if x >0 else -1 if x<0 else 0 for x in ticker_ret_list]
+
+#X = pd.Series(posttime_list[ret_na_len:])
+#y = pd.Series(ticker_ret_direction[ret_na_len:])
+
+X = pd.Series(posttime_list)
+y = pd.Series(ticker_ret_direction)
+
+train_test_split   = 0.8
+train_len          = round(train_test_split * len(y))
+
+
+X_train    = X.iloc[:train_len,]
+y_train    = y.iloc[:train_len]
+X_test     = X.iloc[train_len:,]
+y_test     = y.iloc[train_len:,]
+
+trainfeats = get_word_feats_all(X_train,y_train)
+        
+classifier = NaiveBayesClassifier.train(trainfeats)
+
+predicted_y_list = []
+for i in range(len(X_test)):
+
+    predicted_y   = classifier.classify(word_feats(X_test.iloc[i]))
+    predicted_y_list.append(predicted_y)
+    
+validation_y_list = y_test.values.tolist()
+true_prediction = np.sum([l1==l2 for l1, l2 in zip(predicted_y_list,validation_y_list)])
+accuracy_rate    = true_prediction/len(y_test)
+print("accuracy_rate ",accuracy_rate)
+
+high_corr_tickers  = ['GME','NOK','AMC','SNDL','CRSR','NOK','MVIS','AAL']
+def stock_return_mapper_high_corr_tickers(ticker_location, input_ret, post, high_corr_tickers):
+    posttime_list    = []
+    ticker_ret_list  = []
+    for i in range(len(ticker_location)):
+        ticker_list  = ticker_location.iloc[i].split(' ')
+        post_i       = post.iloc[ticker_location.index[i]]['title']
+    
+        for ticker in ticker_list:
+            if ticker in high_corr_tickers :
+                posttime     =post.iloc[ticker_location.index[i]].name
+                posttime_1d_later    = pd.to_datetime(posttime) + timedelta(1)
+                posttime    = datetime.strftime(posttime_1d_later,'%Y-%m-%d')
+                if posttime in input_ret.index:
+                    ticker_ret   = input_ret.loc[posttime,ticker]
+                    posttime_list.append(post_i)
+                    ticker_ret_list.append(ticker_ret)
+    return posttime_list,ticker_ret_list
+posttime_list,ticker_ret_list  = stock_return_mapper_high_corr_tickers(ticker_location, open2open_ret , post_and_ticker,high_corr_tickers )
+
+ret_na_len               = len(post_and_ticker.index[post_and_ticker.index =='2021-01-28'])
+ticker_ret_direction     = [1 if x >0 else -1 if x<0 else 0 for x in ticker_ret_list]
+
+X = pd.Series(posttime_list[ret_na_len:])
+y = pd.Series(ticker_ret_direction[ret_na_len:])
+
+train_test_split   = 0.8
+train_len          = round(train_test_split * len(y))
+
+
+X_train    = X.iloc[:train_len,]
+y_train    = y.iloc[:train_len]
+X_test     = X.iloc[train_len:,]
+y_test     = y.iloc[train_len:,]
+
+trainfeats = get_word_feats_all(X_train,y_train)
+        
+classifier = NaiveBayesClassifier.train(trainfeats)
+
+predicted_y_list = []
+for i in range(len(X_test)):
+
+    predicted_y   = classifier.classify(word_feats(X_test.iloc[i]))
+    predicted_y_list.append(predicted_y)
+    
+validation_y_list = y_test.values.tolist()
+true_prediction = np.sum([l1==l2 for l1, l2 in zip(predicted_y_list,validation_y_list)])
+accuracy_rate    = true_prediction/len(y_test)
+print("accuracy_rate ",accuracy_rate)
+
+#raw sentiment vs stock return direction
+
