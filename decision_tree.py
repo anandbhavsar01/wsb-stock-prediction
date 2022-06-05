@@ -28,6 +28,7 @@ test = dataset[int(len(dataset)*0.8):]
 print('Running Decision Tree')
 classifier = nltk.classify.DecisionTreeClassifier.train(train, entropy_cutoff=0, support_cutoff=0)
 sorted(classifier.labels())
-print('Decision Tree Accuracy', nltk.classify.accuracy(classifier, test))
+print('Decision Tree Train Accuracy', nltk.classify.accuracy(classifier, train))
+print('Decision Tree Test Accuracy', nltk.classify.accuracy(classifier, test))
 
 

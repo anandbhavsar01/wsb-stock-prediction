@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 
 # Get data
 print('Opening Data')
+#data = pd.read_csv('dataset/reddit_wsb_returns_final.csv')
 data = pd.read_csv('dataset/reddit_wsb_returns_final.csv')
 
 # Preprocess
@@ -33,7 +34,8 @@ from sklearn.ensemble import RandomForestClassifier
 
 clf = RandomForestClassifier(n_estimators=100)
 clf.fit(X_train,y_train)
-y_pred = clf.predict(X_test)
-
 from sklearn import metrics
-print("Accuracy", metrics.accuracy_score(y_test,y_pred))
+y_pred = clf.predict(X_train)
+print("Random Forest Accuracy", metrics.accuracy_score(y_train,y_pred))
+y_pred = clf.predict(X_test)
+print("Random Forest Accuracy", metrics.accuracy_score(y_test,y_pred))
