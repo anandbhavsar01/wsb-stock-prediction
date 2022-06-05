@@ -7,6 +7,7 @@ Created on Wed May  4 20:05:39 2022
 """
 
 import nltk
+import preprocess
 from nltk.tokenize import sent_tokenize
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
@@ -22,6 +23,7 @@ from sklearn.model_selection import train_test_split
 
 from nltk.classify import NaiveBayesClassifier
 from nltk.corpus import stopwords
+import re
 stopset = list(set(stopwords.words('english')))
 
 os.chdir('/Users/laixu/Documents/Machine learning CS 229/project/wsb-stock-prediction/')
@@ -32,9 +34,21 @@ sentiment_mapper = {'Negative':-1,
                     'Positive':1}
 
 reddit_df_labeled['score'] = reddit_df_labeled['label'].map(sentiment_mapper)
+processed = preprocess.get_processed_data(reddit_df_labeled)
+dict_titles = preprocess.convert_to_dict(processed,"title")
+filtered_titles = preprocess.remove_stop_words(dict_titles)
 
+dataset = []
+for i in filtered_titles.keys():
+    sentence = filtered_titles[i]
+    dict_sentence = {}
+    for j in range(0,len(sentence)):
+        dict_sentence[j] = sentence[j]
+    dataset.append(dict_sentence)
+
+dataset_mat = preprocess.convert_to_matrix(dataset)
 # split train data as 70% 30%
-X = reddit_df_labeled['title']
+X = filtered_titles 
 y = reddit_df_labeled['label']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
 
@@ -65,6 +79,19 @@ validation_y_list = y_test.values.tolist()
 true_prediction = np.sum([l1==l2 for l1, l2 in zip(predicted_y_list,validation_y_list)])
 accuracy_rate    = true_prediction/len(y_test)
 print("accuracy_rate ",accuracy_rate)
+
+train_y_predicted_list = []
+for i in range(len(X_test)):
+
+    train_y_predicted   = classifier.classify(word_feats(X_train.iloc[i]))
+    train_y_predicted_list.append(train_y_predicted)
+    
+validation_y_train_list = y_train.values.tolist()
+true_prediction = np.sum([l1==l2 for l1, l2 in zip(train_y_predicted_list,validation_y_train_list)])
+accuracy_rate    = true_prediction/len(y_train)
+print("accuracy_rate train ",accuracy_rate)
+classifier.show_most_informative_features(15)
+
 
 # naive bayes on stock direction
 # match the ticker on that day with
@@ -126,7 +153,20 @@ for i in range(len(X_test)):
 validation_y_list = y_test.values.tolist()
 true_prediction = np.sum([l1==l2 for l1, l2 in zip(predicted_y_list,validation_y_list)])
 accuracy_rate    = true_prediction/len(y_test)
-print("accuracy_rate ",accuracy_rate)
+print("accuracy_rate test ",accuracy_rate)
+
+train_y_predicted_list = []
+for i in range(len(X_test)):
+
+    train_y_predicted   = classifier.classify(word_feats(X_train.iloc[i]))
+    train_y_predicted_list.append(train_y_predicted)
+    
+validation_y_train_list = y_train.values.tolist()
+true_prediction = np.sum([l1==l2 for l1, l2 in zip(train_y_predicted_list,validation_y_train_list)])
+accuracy_rate    = true_prediction/len(y_train)
+print("accuracy_rate train ",accuracy_rate)
+classifier.show_most_informative_features(15)
+
 
 high_corr_tickers  = ['GME','NOK','AMC','SNDL','CRSR','NOK','MVIS','AAL']
 def stock_return_mapper_high_corr_tickers(ticker_location, input_ret, post, high_corr_tickers):
@@ -151,9 +191,10 @@ posttime_list,ticker_ret_list  = stock_return_mapper_high_corr_tickers(ticker_lo
 ret_na_len               = len(post_and_ticker.index[post_and_ticker.index =='2021-01-28'])
 ticker_ret_direction     = [1 if x >0 else -1 if x<0 else 0 for x in ticker_ret_list]
 
-X = pd.Series(posttime_list[ret_na_len:])
-y = pd.Series(ticker_ret_direction[ret_na_len:])
-
+#X = pd.Series(posttime_list[ret_na_len:])
+#y = pd.Series(ticker_ret_direction[ret_na_len:])
+X = pd.Series(posttime_list)
+y = pd.Series(ticker_ret_direction)
 train_test_split   = 0.8
 train_len          = round(train_test_split * len(y))
 
@@ -178,5 +219,14 @@ true_prediction = np.sum([l1==l2 for l1, l2 in zip(predicted_y_list,validation_y
 accuracy_rate    = true_prediction/len(y_test)
 print("accuracy_rate ",accuracy_rate)
 
-#raw sentiment vs stock return direction
+train_y_predicted_list = []
+for i in range(len(X_test)):
 
+    train_y_predicted   = classifier.classify(word_feats(X_train.iloc[i]))
+    train_y_predicted_list.append(train_y_predicted)
+    
+validation_y_train_list = y_train.values.tolist()
+true_prediction = np.sum([l1==l2 for l1, l2 in zip(train_y_predicted_list,validation_y_train_list)])
+accuracy_rate    = true_prediction/len(y_train)
+print("accuracy_rate train ",accuracy_rate)
+classifier.show_most_informative_features(15)
