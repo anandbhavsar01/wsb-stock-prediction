@@ -34,15 +34,19 @@ sentiment_mapper = {'Negative':-1,
                     'Positive':1}
 
 reddit_df_labeled['score'] = reddit_df_labeled['label'].map(sentiment_mapper)
-processed = preprocess.get_processed_data(reddit_df_labeled)
-dict_titles = preprocess.convert_to_dict(processed,"title")
-filtered_titles = preprocess.remove_stop_words(dict_titles)
+
+def get_preprocessed(data):
+    processed = preprocess.get_processed_data(data)
+    dict_titles = preprocess.convert_to_dict(processed,"title")
+    filtered_titles = preprocess.remove_stop_words(dict_titles)
+    return filtered_titles
 
 # split train data as 70% 30%
-X = reddit_df_labeled['title']
+X = reddit_df_labeled
 y = reddit_df_labeled['label']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
-
+X_train  = list(get_preprocessed(X_train).values())
+X_test   = get_preprocessed(X_test)
 
 def word_feats(words):
     return dict([(word, True) for word in words.split() if word not in stopset])
