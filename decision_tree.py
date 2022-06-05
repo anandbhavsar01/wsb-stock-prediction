@@ -24,6 +24,8 @@ for i in filtered_titles.keys():
 print('Preprocessing Complete')
 
 # Create train and test set
+import random
+#random.shuffle(dataset)
 train = dataset[:int(len(dataset)*0.8)]
 test = dataset[int(len(dataset)*0.8):]
 
@@ -33,4 +35,9 @@ sorted(classifier.labels())
 print('Decision Tree Train Accuracy', nltk.classify.accuracy(classifier, train))
 print('Decision Tree Test Accuracy', nltk.classify.accuracy(classifier, test))
 
+predictions = []
+for i in range(0,len(dataset)):
+    predictions.append([dataset[i][0],classifier.classify(dataset[i][0])])
+predictions_df = pd.DataFrame(predictions, columns=['text','prediction'])
+predictions_df.to_csv('dataset/decision_tree_predictions.csv')
 
