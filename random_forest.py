@@ -22,6 +22,7 @@ for i in filtered_titles.keys():
     dataset.append(dict_sentence)
 
 dataset_mat = preprocess.convert_to_matrix(dataset)
+
 print('Preprocessing Complete')
 
 X_train = dataset_mat[:int(len(dataset_mat)*0.8)]
