@@ -11,8 +11,8 @@ def remove_links(post):
     return url_pattern.sub(r'', post)
     
 def remove_bad_chars(post):
-  #  other_chars = ['*', '[', ']', '; ',":","“","“","”","-","=","|","^",'!',',','.',"'"] 
-      other_chars = ['*', '[', ']', '; ',":","“","“","”","-","=","|","^"]
+    #print(post)
+    other_chars = ['*', '[', ']', '; ',":","“","“","”","-","=","|","^"] 
     for char in other_chars:
         post = post.replace(char, '')
     return post
@@ -51,7 +51,7 @@ def remove_stop_words(dict_sentences):
 
 import numpy as np
 
-def convert_to_matrix(dataset):
+def convert_to_matrix(dataset: list): 
     words = {}
     count = 1
     for i in range(0,len(dataset)):
