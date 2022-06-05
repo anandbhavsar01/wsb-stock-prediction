@@ -7,6 +7,7 @@ Created on Wed May  4 20:05:39 2022
 """
 
 import nltk
+import preprocess
 from nltk.tokenize import sent_tokenize
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
@@ -22,6 +23,7 @@ from sklearn.model_selection import train_test_split
 
 from nltk.classify import NaiveBayesClassifier
 from nltk.corpus import stopwords
+import re
 stopset = list(set(stopwords.words('english')))
 
 os.chdir('/Users/laixu/Documents/Machine learning CS 229/project/wsb-stock-prediction/')
@@ -32,6 +34,9 @@ sentiment_mapper = {'Negative':-1,
                     'Positive':1}
 
 reddit_df_labeled['score'] = reddit_df_labeled['label'].map(sentiment_mapper)
+processed = preprocess.get_processed_data(reddit_df_labeled)
+dict_titles = preprocess.convert_to_dict(processed,"title")
+filtered_titles = preprocess.remove_stop_words(dict_titles)
 
 # split train data as 70% 30%
 X = reddit_df_labeled['title']
@@ -205,5 +210,14 @@ true_prediction = np.sum([l1==l2 for l1, l2 in zip(predicted_y_list,validation_y
 accuracy_rate    = true_prediction/len(y_test)
 print("accuracy_rate ",accuracy_rate)
 
-#raw sentiment vs stock return direction
+train_y_predicted_list = []
+for i in range(len(X_test)):
 
+    train_y_predicted   = classifier.classify(word_feats(X_train.iloc[i]))
+    train_y_predicted_list.append(train_y_predicted)
+    
+validation_y_train_list = y_train.values.tolist()
+true_prediction = np.sum([l1==l2 for l1, l2 in zip(train_y_predicted_list,validation_y_train_list)])
+accuracy_rate    = true_prediction/len(y_train)
+print("accuracy_rate train ",accuracy_rate)
+classifier.show_most_informative_features(15)
