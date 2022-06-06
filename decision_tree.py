@@ -4,7 +4,8 @@ import nltk
 
 # Get data
 print('Opening Data')
-data = pd.read_csv('dataset/reddit_wsb_returns_final.csv')
+#data = pd.read_csv('dataset/reddit_wsb_returns_final.csv')
+data = pd.read_csv('dataset/reddit_wsb_vader.csv')
 
 # Preprocess
 print('Preprocessing')
@@ -18,7 +19,8 @@ for i in filtered_titles.keys():
     dict_sentence = {}
     for j in range(0,len(sentence)):
         dict_sentence[j] = sentence[j]
-    dataset.append( (dict_sentence, data['Sign'][i] ) )
+    #dataset.append( (dict_sentence, data['Sign'][i] ) )
+    dataset.append((dict_sentence, data['label_val'][i]))
 print('Preprocessing Complete')
 
 # Create train and test set
@@ -28,6 +30,7 @@ test = dataset[int(len(dataset)*0.8):]
 print('Running Decision Tree')
 classifier = nltk.classify.DecisionTreeClassifier.train(train, entropy_cutoff=0, support_cutoff=0)
 sorted(classifier.labels())
-print('Decision Tree Accuracy', nltk.classify.accuracy(classifier, test))
+print('Decision Tree Train Accuracy', nltk.classify.accuracy(classifier, train))
+print('Decision Tree Test Accuracy', nltk.classify.accuracy(classifier, test))
 
 
