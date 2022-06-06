@@ -129,6 +129,52 @@ def stock_return_mapper(ticker_location, input_ret, post):
 posttime_list,ticker_ret_list  = stock_return_mapper(ticker_location, open2open_ret , post_and_ticker)
 
 
+
+def stock_return_mapper_LTSM(ticker_location, input_ret, post):
+    post_time_list   = []
+    postsent_list    = []
+    ticker_ret_list  = []
+    ticker_post_list      = []
+    post_time_pos_list        = []
+    post_time_neu_list        = []
+    post_time_neg_list        = []
+    
+    for i in range(len(ticker_location)):
+        ticker_list  = ticker_location.iloc[i].split(' ')
+        post_i_pos       = post.iloc[ticker_location.index[i]]['pos']
+        post_i_neu       = post.iloc[ticker_location.index[i]]['neu']
+        post_i_neg       = post.iloc[ticker_location.index[i]]['neg']
+      
+        for ticker in ticker_list:
+           
+           posttime     =post.iloc[ticker_location.index[i]].name
+           posttime_1d_later    = pd.to_datetime(posttime) + timedelta(1)
+           posttime    = datetime.strftime(posttime_1d_later,'%Y-%m-%d')
+           if posttime in input_ret.index:
+               post_time_pos_list.append(post_i_pos)
+               post_time_neu_list.append(post_i_neu)
+               post_time_neg_list.append(post_i_neg)
+               
+               ticker_post_list.append(ticker)
+               post_time_list.append(posttime)
+               ticker_ret   = input_ret.loc[posttime,ticker]
+             #  postsent_list.append(postsent)
+               ticker_ret_list.append(ticker_ret)
+    return post_time_pos_list, post_time_neu_list,post_time_neg_list, ticker_post_list, post_time_list, ticker_ret_list
+
+post_time_pos_list, post_time_neu_list,post_time_neg_list, ticker_post_list, post_time_list,ticker_ret_list  = stock_return_mapper_LTSM(ticker_location, open2open_ret , post_and_ticker)
+ticker_post_series   = pd.Series(ticker_post_list)
+post_time_series       = pd.Series(post_time_list)
+post_sent_series         = pd.Series(postsent_list)
+ticker_ret_series        = pd.Series(ticker_ret_list)
+post_time_pos_series     = pd.Series(post_time_pos_list)
+post_time_neu_series     = pd.Series(post_time_neu_list)
+post_time_neg_series     = pd.Series(post_time_neg_list)
+
+LTSM_data          = np.vstack([post_time_series, ticker_post_series, post_time_pos_series,post_time_neu_series,post_time_neg_series, ticker_ret_series  ]).T
+LTSM_input            = pd.DataFrame(LTSM_data, columns = ['Post_time','ticker','pos','neu','neg','ret'])
+LTSM_input.to_csv('./dataset/LTSM_input.csv')
+
 def stock_return_mapper_with_preprocessing(ticker_location, input_ret, post_dict, post):
     posttime_list    = []
     ticker_ret_list  = []

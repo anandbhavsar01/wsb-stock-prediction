@@ -111,6 +111,45 @@ def sell_at_end_model(stocks, sentiment_data, ticker_data):
         balance += stocks[stock] * last_day[stock]
     print(balance)
 
+
+#sell_at_end_model(stocks, sentiment_data, ticker_data)
+
+
+def get_trading_return_with_strategy(stocks,trading_decision,ticker_data):
+    
+    equity_dict,holding_dict, weight_dict  = equity_model(stocks, trading_decision.fillna(0), ticker_data)
+    equity_df  = pd.DataFrame(equity_dict, index = ['Portfolio Value']).T
+    weight_df  = pd.concat(holding_dict)
+
+    equal_weight  = 1/len(weight_df.columns)
+    equal_weight_df = pd.DataFrame(data = equal_weight, index = weight_df.index, columns = weight_df.columns)
+    weight_df   = pd.concat(weight_dict)
+    weight_df.iloc[0,:] = equal_weight
+
+# compare the returns
+    weight_df             = weight_df.reset_index().drop(columns = 'level_1')
+    weight_df             = weight_df.rename(columns = {'level_0': 'Day'})
+    weight_df             = weight_df.set_index('Day')
+
+    equal_weight_df             = equal_weight_df.reset_index()
+    equal_weight_df             = equal_weight_df.rename(columns = {'level_0': 'Day'})
+    equal_weight_df             = equal_weight_df.set_index('Day')
+
+    ticker_data_idx       = ticker_data.set_index('Day')
+
+
+    open2open_ret             = ticker_data_idx.diff(1)/ticker_data_idx
+    ret_template              = pd.DataFrame(index = open2open_ret.index, columns = open2open_ret.columns )
+    ret_template_weights      = ret_template.fillna(weight_df  ).fillna(method = 'ffill')
+    ret_template_equal_weights   = ret_template.fillna(equal_weight_df  ).fillna(method = 'ffill')
+    strategy_ret      = (open2open_ret * ret_template_weights).sum(axis =1)
+    benchmark_ret      = (open2open_ret * ret_template_equal_weights).sum(axis =1)
+    combined_ret       = pd.concat([strategy_ret , benchmark_ret],axis =1)
+    combined_ret.columns = ['strategy','benchmark']
+    ticker_data_time = pd.read_excel('tickerdata_day_open_LX.xlsx').Day
+    combined_ret.index =ticker_data_time
+    return weight_df, strategy_ret, combined_ret
+
 stocks = { 'PLTR':0,'RKT':0,'ONE':0,'AMC':0,'REAL':0,'SPCE':0,'AMD':0,'DD':0,'GME':0,'TSLA':0,'CRSR':0,'RH':0,'BB':0,'CLOV':0,
     'NOK':0,'AM':0,'WISH':0,'UWMC':0,'BY':0,'MVIS':0,'NIO':0,'APP':0,'SNDL':0,'AAL':0,'TD':0 }
 sentiment_data =  pd.read_csv('dataset/sentiment_ticker_by_day_sum.csv')
@@ -118,49 +157,7 @@ ticker_data = pd.read_excel('tickerdata_day_open.xlsx')
 #sell_at_end_model(stocks, sentiment_data, ticker_data)
 sentiment_data =  pd.read_csv('dataset/sentiment_ticker_by_day_sum.csv').set_index('Day').shift(1)
 sentiment_data['Day']  = sentiment_data.index
-#sell_at_end_model(stocks, sentiment_data, ticker_data)
-equity_dict,holding_dict, weight_dict  = equity_model(stocks, sentiment_data.fillna(0), ticker_data)
-equity_df  = pd.DataFrame(equity_dict, index = ['Portfolio Value']).T
-holding_df  = pd.concat(holding_dict)
-
-equal_weight  = 1/len(weight_df.columns)
-equal_weight_df = pd.DataFrame(data = equal_weight, index = weight_df.index, columns = weight_df.columns)
-weight_df   = pd.concat(weight_dict)
-weight_df.iloc[0,:] = equal_weight
-
-# compare the returns
-weight_df             = weight_df.reset_index().drop(columns = 'level_1')
-weight_df             = weight_df.rename(columns = {'level_0': 'Day'})
-weight_df             = weight_df.set_index('Day')
-
-equal_weight_df             = equal_weight_df.reset_index()
-equal_weight_df             = equal_weight_df.rename(columns = {'level_0': 'Day'})
-equal_weight_df             = equal_weight_df.set_index('Day')
-
-ticker_data_idx       = ticker_data.set_index('Day')
+weight_df, strategy_ret, combined_ret  = get_trading_return_with_strategy(stocks, sentiment_data.fillna(0),ticker_data)
 
 
-open2open_ret             = ticker_data_idx.diff(1)/ticker_data_idx
-ret_template              = pd.DataFrame(index = open2open_ret.index, columns = open2open_ret.columns )
-ret_template_weights      = ret_template.fillna(weight_df  ).fillna(method = 'ffill')
-ret_template_equal_weights   = ret_template.fillna(equal_weight_df  ).fillna(method = 'ffill')
-strategy_ret      = (open2open_ret * ret_template_weights).sum(axis =1)
-benchmark_ret      = (open2open_ret * ret_template_equal_weights).sum(axis =1)
-combined_ret       = pd.concat([strategy_ret , benchmark_ret],axis =1)
-combined_ret.columns = ['strategy','benchmark']
 
-ticker_data_time = pd.read_excel('tickerdata_day_open_LX.xlsx').Day
-combined_ret.index =ticker_data_time
-((1+ combined_ret).cumprod()-1).plot()
-
-stocks = { 'PLTR':0,'RKT':0,'ONE':0,'AMC':0,'REAL':0,'SPCE':0,'AMD':0,'DD':0,'GME':0,'TSLA':0,'CRSR':0,'RH':0,'BB':0,'CLOV':0,
-    'NOK':0,'AM':0,'WISH':0,'UWMC':0,'BY':0,'MVIS':0,'NIO':0,'APP':0,'SNDL':0,'AAL':0,'TD':0 }
-equity_dict_oneshare,holding_dict_oneshare  = equity_model_oneshare(stocks, sentiment_data.fillna(0), ticker_data)
-equity_df_oneshare  = pd.DataFrame(equity_dict_oneshare, index = ['Portfolio Value']).T
-holding_df_oneshare  = pd.concat(holding_dict_oneshare)
-
-
-ticker_data = pd.read_excel('tickerdata_day_open_LX.xlsx')
-#sell_at_end_model(stocks, sentiment_data, ticker_data)
-sentiment_data =  pd.read_csv('dataset/sentiment_by_ticker_sum.csv').shift(1)
-equity_dict,holding_dict  = equity_model_ts(stocks, sentiment_data.fillna(0), ticker_data)

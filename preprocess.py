@@ -12,7 +12,7 @@ def remove_links(post):
     
 def remove_bad_chars(post):
   #  other_chars = ['*', '[', ']', '; ',":","“","“","”","-","=","|","^",'!',',','.',"'"] 
-      other_chars = ['*', '[', ']', '; ',":","“","“","”","-","=","|","^"]
+    other_chars = ['*', '[', ']', '; ',":","“","“","”","-","=","|","^"]
     for char in other_chars:
         post = post.replace(char, '')
     return post
